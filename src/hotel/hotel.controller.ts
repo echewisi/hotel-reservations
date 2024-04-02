@@ -5,12 +5,12 @@ import {
   Get,
   Param,
   NotFoundException,
-  UnauthorizedException,
   Req,
+  UseGuards,
 } from '@nestjs/common';
 import { HotelService } from './hotel.service';
-import { CreateHotelDto } from './dto/create-reservations.dto';
-import { BookHotelDto } from './dto/book-hotel.dto';
+import { CreateHotelDto } from 'src/dto/create-reservation.dto';
+import { BookHotelDto } from '../dto/book-hotel.dto';
 import { AuthGuard } from '@nestjs/passport';
 
 @Controller('hotels')
@@ -23,21 +23,13 @@ export class HotelController {
   }
 
   @Post('book')
-  @UseGuAuthGuard('jwt'))
+  @UseGuards(AuthGuard('jwt'))
   async bookHotel(@Body() bookHotelDto: BookHotelDto, @Req() req) {
-    const { hotel_tag, email, password } = bookHotelDto;
-    const userId = req.user.id; // Assuming user ID is available in request
+    const { hotel_tag, email } = bookHotelDto;
+    const userId = req.user.id;
+    const user_email = email; // Assuming user ID is available in request
 
-    // Check if the user's credentials are valid
-    const isValidCredentials = await this.authService.validateUser(
-      email,
-      password,
-    );
-    if (!isValidCredentials) {
-      throw new UnauthorizedException('Invalid credentials');
-    }
-
-    return this.hotelService.bookHotel(hotel_tag, userId);
+    return this.hotelService.bookHotel(hotel_tag, userId, user_email);
   }
 
   @Get(':hotel_tag')
